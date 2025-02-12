@@ -2,9 +2,10 @@ const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const path = require("path");
+const crypto = require("crypto"); // For generating unique IDs
 
 const app = express();
-const PORT = 3000;
 const USERS_FILE = "users.json";
 
 app.use(cors());
@@ -21,9 +22,6 @@ function saveUsers(users) {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-
-const crypto = require("crypto"); // For generating unique IDs
-
 // ✅ **Signup Route with Unique User ID**
 app.post("/signup", (req, res) => {
     let users = getUsers();
@@ -36,26 +34,18 @@ app.post("/signup", (req, res) => {
     // Generate a unique ID for the user
     const userID = crypto.randomBytes(6).toString("hex");
 
-    users.push({ id: userID, username, password, favorites: [] }); // Add user with unique ID
+    users.push({ id: userID, username, password, favorites: [] });
     saveUsers(users);
 
     res.json({ success: true, message: "Signup successful", userID });
 });
 
-
-
-
-
-const path = require("path");
-
-// ✅ **Serve favourites.html**
+// ✅ Serve `favourites.html`
 app.get("/favourites.html", (req, res) => {
     res.sendFile(path.join(__dirname, "favourites.html"));
 });
 
-
-
-
+// ✅ Get User ID by Username
 app.get("/get-user-id", (req, res) => {
     let users = getUsers();
     const { username } = req.query;
@@ -68,7 +58,7 @@ app.get("/get-user-id", (req, res) => {
     res.json({ success: true, userID: user.id });
 });
 
-// ✅ Fix: Corrected API Route to Get User Favorites by ID
+// ✅ Get User Favorites by ID
 app.get("/api/user-favorites/:userID", (req, res) => {
     let users = getUsers();
     const { userID } = req.params;
@@ -81,8 +71,7 @@ app.get("/api/user-favorites/:userID", (req, res) => {
     res.json({ success: true, username: user.username, favorites: user.favorites || [] });
 });
 
-
-
+// ✅ Login Route
 app.post("/login", (req, res) => {
     let users = getUsers();
     const { username, password } = req.body;
@@ -96,6 +85,7 @@ app.post("/login", (req, res) => {
     }
 });
 
+// ✅ Save Favorite Movies
 app.post("/save-favorites", (req, res) => {
     let users = getUsers();
     const { username, id, title, poster } = req.body;
@@ -112,6 +102,7 @@ app.post("/save-favorites", (req, res) => {
     res.json({ success: true, message: "Favorite saved" });
 });
 
+// ✅ Get User Favorites
 app.get("/get-favorites", (req, res) => {
     let users = getUsers();
     const { username } = req.query;
@@ -124,7 +115,7 @@ app.get("/get-favorites", (req, res) => {
     res.json({ success: true, favorites: user.favorites || [] });
 });
 
-// Remove Favorite Route
+// ✅ Remove Favorite Movie
 app.post("/remove-favorite", (req, res) => {
     let users = getUsers();
     const { username, id } = req.body;
@@ -138,5 +129,5 @@ app.post("/remove-favorite", (req, res) => {
     res.json({ success: true, message: "Favorite removed" });
 });
 
-// Start server
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+// ✅ Export Express App for Vercel
+module.exports = app;
