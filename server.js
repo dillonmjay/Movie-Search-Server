@@ -33,6 +33,10 @@ app.post("/signup", (req, res) => {
     let users = getUsers();
     const { username, password } = req.body;
 
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required." });
+    }
+
     if (users.some(user => user.username === username)) {
         return res.status(400).json({ message: "User already exists" });
     }
@@ -75,6 +79,10 @@ app.get("/api/user-favorites/:userID", (req, res) => {
 app.post("/login", (req, res) => {
     let users = getUsers();
     const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required." });
+    }
 
     let user = users.find(user => user.username === username && user.password === password);
 
@@ -141,6 +149,10 @@ app.post("/add-user", (req, res) => {
     let users = getUsers();
     const { username, password } = req.body;
 
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required." });
+    }
+
     if (users.some(user => user.username === username)) {
         return res.status(400).json({ message: "User already exists" });
     }
@@ -153,7 +165,7 @@ app.post("/add-user", (req, res) => {
     res.json({ message: "User added successfully!" });
 });
 
-// ✅ Edit User (Admin Feature)
+// ✅ Edit User (Admin Feature, Now Edits User ID)
 app.post("/edit-user", (req, res) => {
     let users = getUsers();
     const { oldUsername, newValue, field } = req.body;
@@ -163,8 +175,23 @@ app.post("/edit-user", (req, res) => {
         return res.status(404).json({ message: "User not found" });
     }
 
-    if (field === "username") user.username = newValue;
-    if (field === "password") user.password = newValue;
+    if (field === "username") {
+        if (users.some(u => u.username === newValue)) {
+            return res.status(400).json({ message: "Username already taken." });
+        }
+        user.username = newValue;
+    }
+
+    if (field === "password") {
+        user.password = newValue;
+    }
+
+    if (field === "id") {
+        if (users.some(u => u.id === newValue)) {
+            return res.status(400).json({ message: "User ID already exists." });
+        }
+        user.id = newValue;
+    }
 
     saveUsers(users);
     res.json({ message: "User updated successfully!" });
